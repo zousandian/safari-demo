@@ -1,0 +1,24 @@
+poll demo
+<button onclick="poll();">start poll</button>
+<script>
+  function poll() {
+    fetch('https://get.geojs.io/v1/ip/country.json')
+      .then((res) => res.json())
+      .then((data) => console.log(data))
+      .finally(() => {
+        setTimeout(() => {
+          requestAnimationFrame(poll);
+        }, 1000);
+      });
+  }
+
+  // 监听页面可见性变化（使用一次性监听）
+  var visibilityHandler = function visibilityHandler(e) {
+    console.log('visible change', e);
+    if (document.visibilityState === 'visible') {
+      console.log('visibled');
+      requestAnimationFrame(poll);
+    }
+  };
+  document.addEventListener('visibilitychange', visibilityHandler, { once: true });
+</script>
