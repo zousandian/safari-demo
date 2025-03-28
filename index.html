@@ -1,10 +1,49 @@
-poll demo
-<button onclick="poll();">start poll</button>
+<h1>Poll Demo</h1>
+<button id="pollButton" onclick="startPoll();">start poll</button>
+<div id="status"></div>
+<div id="result"></div>
+
 <script>
+  const statusElement = document.getElementById('status');
+  const resultElement = document.getElementById('result');
+  const pollButton = document.getElementById('pollButton');
+
+  function startPoll() {
+    pollButton.style.display = 'none';
+    resultElement.innerHTML = '';
+    poll();
+  }
+
+  function appendResult(data, duration) {
+    const time = new Date().toLocaleTimeString();
+    const resultItem = document.createElement('div');
+    const durationText = duration ? ` (${duration}ms)` : '';
+    resultItem.innerHTML = `[${time}]${durationText} ${JSON.stringify(data)}`;
+    // 如果耗时超过1秒(1000ms)，添加黄色背景高亮
+    if (duration && duration > 1000) {
+      resultItem.style.backgroundColor = 'yellow';
+    }
+    resultElement.appendChild(resultItem);
+  }
+
   function poll() {
+    appendResult('polling...');
+    const startTime = performance.now();
+
     fetch('https://get.geojs.io/v1/ip/country.json')
       .then((res) => res.json())
-      .then((data) => console.log(data))
+      .then((data) => {
+        const duration = Math.round(performance.now() - startTime);
+        appendResult(data, duration);
+      })
+      .catch((error) => {
+        const time = new Date().toLocaleTimeString();
+        const duration = Math.round(performance.now() - startTime);
+        const errorItem = document.createElement('div');
+        errorItem.style.color = 'red';
+        errorItem.innerHTML = `[${time}] (${duration}ms) Error: ${error.message}`;
+        resultElement.appendChild(errorItem);
+      })
       .finally(() => {
         setTimeout(() => {
           requestAnimationFrame(poll);
@@ -12,11 +51,10 @@ poll demo
       });
   }
 
-  // 监听页面可见性变化（使用一次性监听）
   var visibilityHandler = function visibilityHandler(e) {
-    console.log('visible change', e);
+    statusElement.textContent = 'Page visibility changed';
     if (document.visibilityState === 'visible') {
-      console.log('visibled');
+      statusElement.textContent = 'Page visible, resuming poll';
       requestAnimationFrame(poll);
     }
   };
